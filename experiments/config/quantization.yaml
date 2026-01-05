@@ -1,0 +1,25 @@
+# 量化配置
+model:
+  base_model: bert-base-uncased
+  num_labels: 2
+
+quantization:
+  bits: 8  # INT8 quantization
+  symmetric: true
+  per_channel: true
+  quantize_embeddings: false
+  quantize_classifier: true
+  calibration_batches: 10
+
+training:
+  num_epochs: 5
+  batch_size: 32
+  learning_rate: 2.0e-6  # Lower learning rate for QAT
+  weight_decay: 0.01
+
+data:
+  dataset: sst2
+  max_length: 128
+
+output:
+  dir: ./results/quantization

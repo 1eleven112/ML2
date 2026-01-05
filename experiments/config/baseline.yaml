@@ -1,0 +1,21 @@
+# 基线模型配置
+model:
+  name: bert-base-uncased
+  num_labels: 2
+
+training:
+  num_epochs: 5
+  batch_size: 32
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_ratio: 0.1
+
+data:
+  dataset: sst2
+  max_length: 128
+
+output:
+  dir: ./results/baseline
+  save_best: true
+  save_final: true

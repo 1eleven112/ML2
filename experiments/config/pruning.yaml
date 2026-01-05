@@ -1,0 +1,22 @@
+# 剪枝配置
+model:
+  base_model: bert-base-uncased
+  num_labels: 2
+
+pruning:
+  head_pruning_ratio: 0.3  # 剪枝30%的注意力头
+  ffn_pruning_ratio: 0.25  # 剪枝25%的FFN维度
+  importance_metric: gradient  # gradient or activation
+
+training:
+  num_epochs: 10
+  batch_size: 32
+  learning_rate: 1.0e-5
+  weight_decay: 0.01
+
+data:
+  dataset: sst2
+  max_length: 128
+
+output:
+  dir: ./results/pruning

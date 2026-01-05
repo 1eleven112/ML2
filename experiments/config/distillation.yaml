@@ -1,0 +1,27 @@
+# 知识蒸馏配置
+teacher:
+  model_name: bert-base-uncased
+
+student:
+  model_name: bert-base-uncased
+  num_labels: 2
+
+distillation:
+  temperature: 2.0
+  alpha: 0.5  # CE loss weight
+  beta: 0.3   # KD loss weight
+  gamma: 0.2  # Feature loss weight
+
+training:
+  num_epochs: 20
+  batch_size: 32
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+
+data:
+  dataset: sst2
+  max_length: 128
+
+output:
+  dir: ./results/distillation
