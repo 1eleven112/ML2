@@ -3,32 +3,10 @@ GLUE数据集加载器
 支持多种GLUE任务的数据加载和预处理
 """
 
-import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from datasets import load_dataset
 from typing import Tuple, Optional
-
-
-class GLUEDataset(Dataset):
-    """GLUE数据集包装器"""
-    
-    def __init__(self, encodings, labels):
-        """
-        Args:
-            encodings: 编码后的输入
-            labels: 标签
-        """
-        self.encodings = encodings
-        self.labels = labels
-    
-    def __len__(self):
-        return len(self.labels)
-    
-    def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
-        return item
 
 
 # GLUE任务配置
