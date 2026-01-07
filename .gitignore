@@ -51,7 +51,7 @@ wandb/
 *.safetensors
 
 # Data
-data/
+/data/
 datasets/
 .cache/
 
