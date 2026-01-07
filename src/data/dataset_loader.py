@@ -5,7 +5,7 @@ GLUE数据集加载器
 
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict
 from typing import Tuple, Optional
 
 
@@ -165,6 +165,9 @@ def load_glue_data(
     # 设置格式
     encoded_dataset.set_format(type='torch')
     
+    # 保存测试集（如果存在）
+    test_dataset = encoded_dataset.get('test', None)
+    
     # 验证集 - 某些GLUE任务使用validation，其他使用validation_matched
     if 'validation' in encoded_dataset:
         val_dataset = encoded_dataset['validation']
@@ -172,7 +175,6 @@ def load_glue_data(
         val_dataset = encoded_dataset['validation_matched']
     else:
         # 如果没有验证集，从训练集中分割（避免数据泄露）
-        from datasets import DatasetDict
         train_val_split = encoded_dataset['train'].train_test_split(test_size=0.1, seed=42)
         encoded_dataset = DatasetDict({
             'train': train_val_split['train'],
@@ -197,9 +199,9 @@ def load_glue_data(
     
     # 测试集 - 某些GLUE任务有测试集
     test_loader = None
-    if 'test' in encoded_dataset:
+    if test_dataset is not None:
         test_loader = DataLoader(
-            encoded_dataset['test'],
+            test_dataset,
             batch_size=batch_size,
             shuffle=False,
             num_workers=num_workers,
@@ -211,7 +213,7 @@ def load_glue_data(
     print(f"  Train samples: {len(encoded_dataset['train'])}")
     print(f"  Val samples: {len(val_dataset)}")
     if test_loader is not None:
-        print(f"  Test samples: {len(encoded_dataset['test'])}")
+        print(f"  Test samples: {len(test_dataset)}")
     print(f"  Number of labels: {num_labels}")
     
     return train_loader, val_loader, test_loader, num_labels
