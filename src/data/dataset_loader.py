@@ -170,15 +170,37 @@ def load_glue_data(
     def tokenize_function(examples):
         return preprocess_function(examples, tokenizer, text_fields, max_length)
     
+    # 确定要删除的列（保留label列）
+    columns_to_remove = [col for col in dataset['train'].column_names if col != 'label']
+    
     # 对数据集进行编码
     encoded_dataset = dataset.map(
         tokenize_function,
         batched=True,
-        remove_columns=dataset['train'].column_names
+        remove_columns=columns_to_remove
     )
+    
+    # 重命名label列为labels（符合transformers约定）
+    if 'label' in encoded_dataset['train'].column_names:
+        encoded_dataset = encoded_dataset.rename_column('label', 'labels')
     
     # 设置格式
     encoded_dataset.set_format(type='torch')
+    
+    # 验证集 - 某些GLUE任务使用validation，其他使用validation_matched
+    if 'validation' in encoded_dataset:
+        val_dataset = encoded_dataset['validation']
+    elif 'validation_matched' in encoded_dataset:
+        val_dataset = encoded_dataset['validation_matched']
+    else:
+        # 如果没有验证集，从训练集中分割（避免数据泄露）
+        from datasets import DatasetDict
+        train_val_split = encoded_dataset['train'].train_test_split(test_size=0.1, seed=42)
+        encoded_dataset = DatasetDict({
+            'train': train_val_split['train'],
+            'validation': train_val_split['test'],
+        })
+        val_dataset = encoded_dataset['validation']
     
     # 创建数据加载器
     train_loader = DataLoader(
@@ -188,17 +210,8 @@ def load_glue_data(
         num_workers=num_workers,
     )
     
-    # 验证集 - 某些GLUE任务使用validation，其他使用validation_matched
-    if 'validation' in encoded_dataset:
-        val_split = 'validation'
-    elif 'validation_matched' in encoded_dataset:
-        val_split = 'validation_matched'
-    else:
-        # 如果没有验证集，使用训练集的一部分
-        val_split = 'train'
-    
     val_loader = DataLoader(
-        encoded_dataset[val_split],
+        val_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
@@ -218,7 +231,7 @@ def load_glue_data(
     
     print(f"Dataset loaded:")
     print(f"  Train samples: {len(encoded_dataset['train'])}")
-    print(f"  Val samples: {len(encoded_dataset[val_split])}")
+    print(f"  Val samples: {len(val_dataset)}")
     if test_loader is not None:
         print(f"  Test samples: {len(encoded_dataset['test'])}")
     print(f"  Number of labels: {num_labels}")
